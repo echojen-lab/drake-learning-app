@@ -1,6 +1,6 @@
 // Sensei English – service worker (offline support)
 // Change CACHE_VERSION whenever you edit any file below, so phones get the new version.
-const CACHE_VERSION = "sensei-v2";
+const CACHE_VERSION = "sensei-v3";
 
 const PRECACHE = [
   "vocab.html",

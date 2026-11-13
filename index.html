@@ -383,7 +383,29 @@
     scrollDown();
   }
 
-  function showRetry(message) {
+  // Turn technical errors into messages a learner can act on
+  function friendlyError(err) {
+    if (location.protocol === "file:") {
+      return {
+        message: "Chat only works on the website, not from a saved file. Please open the app's web address.",
+        canRetry: false
+      };
+    }
+    if (err.name === "AbortError") {
+      return { message: "Something went wrong. Let's try again.", canRetry: true };
+    }
+    if (!navigator.onLine) {
+      return { message: "You're offline. Connect to the internet to chat with Sensei.", canRetry: true };
+    }
+    if (err instanceof TypeError) {
+      // fetch() itself failed: no answer from the server at all ("Failed to fetch")
+      return { message: "Can't reach Sensei. Check your internet connection and try again.", canRetry: true };
+    }
+    // Our server answered with an error; its message is already learner-friendly
+    return { message: err.message, canRetry: true };
+  }
+
+  function showRetry(message, canRetry = true) {
     const div = document.createElement("div");
     div.className = "msg error";
     const text = document.createElement("span");
@@ -393,7 +415,8 @@
     btn.className = "retry-btn";
     btn.textContent = "↻ Retry";
     btn.onclick = retry;
-    div.append(text, btn);
+    div.append(text);
+    if (canRetry) div.append(btn);
     chat.appendChild(div);
     scrollDown();
     return div;
@@ -449,10 +472,8 @@
       senseiRecordActivity();
     } catch (err) {
       hideTyping();
-      const message = err.name === "AbortError"
-        ? "Something went wrong. Let's try again."
-        : "Connection problem: " + err.message;
-      failed = { userBubble, errorBubble: showRetry(message) };
+      const { message, canRetry } = friendlyError(err);
+      failed = { userBubble, errorBubble: showRetry(message, canRetry) };
     } finally {
       clearTimeout(slowTimer);
       clearTimeout(timeoutTimer);
