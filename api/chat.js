@@ -32,9 +32,16 @@ const REFUSAL_REPLY =
   "Sorry, I can't help with that. Let's talk about something else! What do you like to do on weekends?";
 const EMPTY_REPLY = "Sorry, I didn't catch that. Can you say it again?";
 
-// Reads ANTHROPIC_API_KEY from the environment.
+// Created on the first request (not when the file loads), so a missing or
+// broken API key gives a clear error message instead of crashing the function.
 // Short timeout: the chat page gives up after 20 seconds anyway.
-const client = new Anthropic({ timeout: 15000, maxRetries: 1 });
+let client = null;
+function getClient() {
+  if (!client) {
+    client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim(), timeout: 15000, maxRetries: 1 });
+  }
+  return client;
+}
 
 // Only accept plain { role, content } text messages from the browser,
 // so the front-end can't change the system prompt or any other setting.
@@ -86,7 +93,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    let response = await client.messages.create({
+    let response = await getClient().messages.create({
       model: MODEL,
       max_tokens: MAX_TOKENS,
       system: SYSTEM_PROMPT,
@@ -97,7 +104,7 @@ export default async function handler(req, res) {
     });
 
     if (response.stop_reason === "refusal") {
-      response = await client.messages.create({
+      response = await getClient().messages.create({
         model: FALLBACK_MODEL,
         max_tokens: MAX_TOKENS,
         system: SYSTEM_PROMPT,
