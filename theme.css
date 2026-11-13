@@ -1,0 +1,48 @@
+/* Dark mode for all Sensei pages. Turned on by <html data-theme="dark">. */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1A1A2E;
+  --surface: #2D2D44;
+  --text: #E5E5E5;
+  --muted: #A3A3B8;
+  --border: #42425E;
+  --track: #42425E;
+  --gray-btn: #42425E;
+  --teal-light: #1F3D4A;
+  /* --teal stays #14B8A6 */
+}
+
+/* Teal text needs to be lighter to stay readable on dark surfaces */
+[data-theme="dark"] .starter:hover,
+[data-theme="dark"] .starter-tag,
+[data-theme="dark"] .badge.known,
+[data-theme="dark"] .back .jp,
+[data-theme="dark"] .review-btn,
+[data-theme="dark"] .go.secondary,
+[data-theme="dark"] .empty-hint a {
+  color: #5EEAD4;
+}
+
+[data-theme="dark"] .msg.error {
+  background: #3B1F2B;
+  color: #FCA5A5;
+  border-color: #7F1D1D;
+}
+[data-theme="dark"] .badge.learning { background: #3D3220; color: #FBBF24; }
+[data-theme="dark"] .learn:hover { background: #52526E; }
+[data-theme="dark"] .toast,
+[data-theme="dark"] .tip { background: #E5E5E5; color: #1A1A2E; }
+
+/* Header buttons + the sun/moon toggle */
+.header-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.theme-toggle {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  display: grid; place-items: center;
+  cursor: pointer;
+}
+.theme-toggle:hover { border-color: var(--teal); color: var(--teal); }
+.theme-toggle:focus-visible { outline: 3px solid var(--teal); outline-offset: 2px; }

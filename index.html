@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sensei – English Tutor</title>
+<script>try{var t=localStorage.getItem("sensei-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.dataset.theme=t;}catch(e){}</script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#14B8A6">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sensei">
+<style>
+  :root {
+    --teal: #14B8A6;
+    --teal-dark: #0F9E8E;
+    --bg: #F5F5F4;
+    --surface: #fff;
+    --border: #E7E5E4;
+    --text: #1C1917;
+    --muted: #78716C;
+    --green: #22C55E;
+    --teal-light: #F0FDFA;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+  }
+  .app {
+    width: 100%;
+    max-width: 720px;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .tutor { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--teal); color: #fff;
+    display: grid; place-items: center;
+    font-weight: 700; font-size: 18px;
+  }
+  .name { font-weight: 600; font-size: 17px; }
+  .status { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+  .new-btn {
+    border: 1px solid var(--teal); color: var(--teal); background: var(--surface);
+    padding: 8px 12px; border-radius: 999px; font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+  .new-btn:hover { background: var(--teal-light); }
+
+  /* Chat */
+  .chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .starters {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .starters p {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  .starter {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 12px; font-size: 15px; text-align: left; cursor: pointer;
+    color: var(--text);
+  }
+  .starter:hover { border-color: var(--teal); color: var(--teal-dark); }
+  .starter.featured {
+    grid-column: 1 / -1;
+    background: var(--teal-light);
+    border: 1.5px solid var(--teal);
+    font-weight: 600;
+  }
+  .starter-tag {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--teal-dark);
+    margin-bottom: 4px;
+  }
+
+  .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: var(--teal);
+    color: #fff;
+    border-bottom-right-radius: 6px;
+  }
+  .msg.tutor {
+    align-self: flex-start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 6px;
+  }
+  .msg.error {
+    align-self: center;
+    background: #FEF2F2; color: #B91C1C; border: 1px solid #FECACA;
+    font-size: 13px;
+  }
+
+  /* Typing indicator */
+  .typing { display: flex; gap: 4px; align-items: center; padding: 14px 16px; }
+  .typing span {
+    width: 8px; height: 8px; border-radius: 50%; background: #A8A29E;
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  .typing { flex-wrap: wrap; }
+  .slow-note {
+    flex-basis: 100%;
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .msg.error {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    font-size: 14px; text-align: center;
+  }
+  .retry-btn {
+    border: none; border-radius: 999px;
+    background: var(--teal); color: #fff;
+    padding: 7px 16px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .retry-btn:hover { background: var(--teal-dark); }
+  .msg.user.unsent { opacity: 0.5; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.6; }
+    30% { transform: translateY(-6px); opacity: 1; }
+  }
+
+  /* Input */
+  form {
+    display: flex; gap: 8px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  #input {
+    flex: 1;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 12px 16px;
+    font-size: 16px;
+    outline: none;
+    background: var(--bg);
+  }
+  #input:focus { border-color: var(--teal); background: var(--surface); }
+  #send {
+    width: 46px; height: 46px; border-radius: 50%;
+    border: none; background: var(--teal); color: #fff;
+    display: grid; place-items: center; cursor: pointer;
+  }
+  #send:hover { background: var(--teal-dark); }
+  #send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Navigation: bottom tab bar on mobile, top bar on wider screens */
+  .tabbar { display: flex; background: var(--surface); border-top: 1px solid var(--border); }
+  .tabbar a {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    font-size: 12px; font-weight: 600; color: var(--muted); text-decoration: none;
+  }
+  .tabbar a.active { color: var(--teal); }
+  @media (min-width: 641px) {
+    .tabbar {
+      order: -1; justify-content: center; gap: 8px; padding: 8px;
+      border-top: none; border-bottom: 1px solid var(--border);
+    }
+    .tabbar a { flex: none; flex-direction: row; gap: 8px; padding: 8px 16px; font-size: 14px; border-radius: 999px; }
+    .tabbar a.active { background: var(--teal-light); }
+  }
+</style>
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="tutor">
+      <div class="avatar">S</div>
+      <div>
+        <div class="name">Sensei</div>
+        <div class="status"><span class="dot"></span>Online</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="new-btn" id="newChat" type="button">New Conversation</button>
+      <span data-theme-toggle></span>
+    </div>
+  </header>
+
+  <main class="chat" id="chat"></main>
+
+  <form id="form">
+    <input id="input" type="text" placeholder="Type your message in English..." autocomplete="off">
+    <button id="send" type="submit" aria-label="Send">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    </button>
+  </form>
+
+  <nav class="tabbar" data-active="practice"></nav>
+</div>
+
+<script src="shared.js"></script>
+<script>
+  const DEFAULT_STARTERS = [
+    "Tell me about your day",
+    "Let's practice ordering food",
+    "Help me introduce myself",
+    "I need travel phrases"
+  ];
+
+  // Starter shown first when the student recently studied that flashcard topic.
+  // "replaces" = the default starter it makes redundant.
+  const TOPIC_STARTERS = {
+    Food:      { text: "Let's practice ordering at a restaurant.", replaces: "Let's practice ordering food" },
+    Travel:    { text: "Plan a trip with me in English.",          replaces: "I need travel phrases" },
+    Greetings: { text: "Let's practice meeting someone new.",      replaces: "Help me introduce myself" },
+    Business:  { text: "Let's practice a business meeting.",       replaces: null }
+  };
+  const RECENT_DAYS = 7; // how long a studied topic counts as "recent"
+
+  function getStarters() {
+    const last = senseiRead(SENSEI_KEYS.lastTopic, null);
+    const recent = last && TOPIC_STARTERS[last.topic] &&
+      Date.now() - last.at < RECENT_DAYS * 24 * 60 * 60 * 1000;
+    if (!recent) return { featured: null, topic: null, others: DEFAULT_STARTERS };
+
+    const pick = TOPIC_STARTERS[last.topic];
+    const others = DEFAULT_STARTERS.filter(s => s !== pick.replaces).slice(0, 3);
+    return { featured: pick.text, topic: last.topic, others };
+  }
+
+  const chat = document.getElementById("chat");
+  const form = document.getElementById("form");
+  const input = document.getElementById("input");
+  const sendBtn = document.getElementById("send");
+
+  let history = [];   // { role: "user" | "assistant", content: string }
+  let busy = false;
+
+  function scrollDown() {
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function showStarters() {
+    const box = document.createElement("div");
+    box.className = "starters";
+    box.id = "starters";
+    const { featured, topic, others } = getStarters();
+    box.innerHTML = "<p>Choose a topic to start, or type your own message.</p>";
+
+    const addButton = (text, isFeatured) => {
+      const b = document.createElement("button");
+      b.className = "starter" + (isFeatured ? " featured" : "");
+      b.type = "button";
+      if (isFeatured) {
+        const tag = document.createElement("span");
+        tag.className = "starter-tag";
+        tag.textContent = "✨ Because you studied " + topic;
+        b.appendChild(tag);
+      }
+      b.appendChild(document.createTextNode(text));
+      b.onclick = () => sendMessage(text);
+      box.appendChild(b);
+    };
+
+    if (featured) addButton(featured, true);
+    others.forEach(text => addButton(text, false));
+    chat.appendChild(box);
+  }
+
+  function hideStarters() {
+    const box = document.getElementById("starters");
+    if (box) box.remove();
+  }
+
+  function addBubble(text, who) {
+    const div = document.createElement("div");
+    div.className = "msg " + who;
+    div.textContent = text;
+    chat.appendChild(div);
+    scrollDown();
+    return div;
+  }
+
+  function showTyping() {
+    const div = document.createElement("div");
+    div.className = "msg tutor typing";
+    div.id = "typing";
+    div.setAttribute("aria-label", "Sensei is typing");
+    div.innerHTML = "<span></span><span></span><span></span>";
+    chat.appendChild(div);
+    scrollDown();
+  }
+
+  function hideTyping() {
+    const t = document.getElementById("typing");
+    if (t) t.remove();
+  }
+
+  function setBusy(value) {
+    busy = value;
+    sendBtn.disabled = value;
+  }
+
+  // Sends the chat to our own server (api/chat.js), which holds the API key
+  // and the system prompt. The last entry in history is the student's new message.
+  async function askTutor(signal) {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      signal,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        message: history[history.length - 1].content,
+        history: history.slice(0, -1)
+      })
+    });
+
+    let data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) {
+      throw new Error(data.error || "Server error (" + res.status + ")");
+    }
+    return data.reply || "Sorry, I didn't catch that. Can you say it again?";
+  }
+
+  const SLOW_MS = 10000;     // after 10s: "thinking extra hard" note
+  const TIMEOUT_MS = 20000;  // after 20s: give up and offer Retry
+
+  // Set when the last message got no reply: { userBubble, errorBubble }
+  let failed = null;
+
+  function showSlowNote() {
+    const t = document.getElementById("typing");
+    if (!t || t.querySelector(".slow-note")) return;
+    const note = document.createElement("em");
+    note.className = "slow-note";
+    note.textContent = "Sensei is thinking extra hard! Please wait...";
+    t.appendChild(note);
+    scrollDown();
+  }
+
+  function showRetry(message) {
+    const div = document.createElement("div");
+    div.className = "msg error";
+    const text = document.createElement("span");
+    text.textContent = message;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "retry-btn";
+    btn.textContent = "↻ Retry";
+    btn.onclick = retry;
+    div.append(text, btn);
+    chat.appendChild(div);
+    scrollDown();
+    return div;
+  }
+
+  async function sendMessage(text) {
+    text = text.trim();
+    if (!text || busy) return;
+
+    // The student typed something new instead of pressing Retry:
+    // drop the unanswered message so the conversation stays clean.
+    if (failed) {
+      failed.errorBubble.remove();
+      failed.userBubble.classList.add("unsent");
+      failed.userBubble.title = "This message was not answered";
+      history.pop();
+      failed = null;
+    }
+
+    hideStarters();
+    const userBubble = addBubble(text, "user");
+    history.push({ role: "user", content: text });
+    input.value = "";
+    await requestReply(userBubble);
+  }
+
+  // Re-sends the last message (it is still the last entry in history)
+  function retry() {
+    if (busy || !failed) return;
+    const { userBubble, errorBubble } = failed;
+    errorBubble.remove();
+    failed = null;
+    requestReply(userBubble);
+  }
+
+  async function requestReply(userBubble) {
+    setBusy(true);
+    showTyping();
+
+    const controller = new AbortController();
+    const slowTimer = setTimeout(showSlowNote, SLOW_MS);
+    const timeoutTimer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+      const reply = await askTutor(controller.signal);
+      hideTyping();
+      addBubble(reply, "tutor");
+      history.push({ role: "assistant", content: reply });
+      // First successful exchange in this conversation = one chat session
+      if (history.length === 2) {
+        senseiWrite(SENSEI_KEYS.sessions, senseiRead(SENSEI_KEYS.sessions, 0) + 1);
+      }
+      senseiRecordActivity();
+    } catch (err) {
+      hideTyping();
+      const message = err.name === "AbortError"
+        ? "Something went wrong. Let's try again."
+        : "Connection problem: " + err.message;
+      failed = { userBubble, errorBubble: showRetry(message) };
+    } finally {
+      clearTimeout(slowTimer);
+      clearTimeout(timeoutTimer);
+      setBusy(false);
+      input.focus();
+    }
+  }
+
+  function newConversation() {
+    if (busy) return;
+    history = [];
+    failed = null;
+    chat.innerHTML = "";
+    showStarters();
+    input.value = "";
+    input.focus();
+  }
+
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    sendMessage(input.value);
+  });
+  document.getElementById("newChat").addEventListener("click", newConversation);
+
+  showStarters();
+</script>
+</body>
+</html>
